@@ -21,7 +21,14 @@ public class Player : MonoBehaviour {
     public Transform ToungePoint;
     public float Raydistance = 0.5f;
     public LayerMask groundLayer;
-    public SphereCollider col;
+    private SphereCollider col;
+    public bool Fireflyeaten = false;
+    public bool action = false;
+    public GameObject FireflyGO;
+    public Transform Currentpos;
+    public float fireRate = 0.5f;
+    private float nextFire = 0.0f;
+    public bool rockPull = false;
 
     private void Awake()
     {
@@ -38,62 +45,100 @@ public class Player : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         Movement();
-      Debug.Log(Physics.Raycast(transform.position, Vector3.down, Raydistance));
+      Physics.Raycast(transform.position, Vector3.down, Raydistance);
 
        // Waterjump();
         EatFireFly();
+        if (Fireflyeaten == true)
+        {
+            ShootFirefly();
+        }
     }
 
     void Movement()
     {
-        if (IsGrounded())
+        if(rockPull == true)
         {
             var x = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed;
             var z = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed;
-            myanamator.SetFloat("RunHorozontal", x * 100);
-            myanamator.SetFloat("RunVerticle", z * 100);
+            myanamator.SetFloat("RunHorozontal", x * 20);
+            myanamator.SetFloat("RunVerticle", z * 20);
             transform.Translate(x, 0, z, Space.World);
 
 
             Vector3 movement = new Vector3(x, 0.0f, z);
-            if (movement != Vector3.zero)
+            if (Input.GetButtonDown("Let_Go"))
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15F);
+                rockPull = false;
+            }
+        }
+        if (action == false && rockPull == false)
+        {
+            
+            if (IsGrounded())
+            {
+                var x = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed;
+                var z = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed;
+                myanamator.SetFloat("RunHorozontal", x * 100);
+                myanamator.SetFloat("RunVerticle", z * 100);
+                transform.Translate(x, 0, z, Space.World);
+
+
+                Vector3 movement = new Vector3(x, 0.0f, z);
+                if (movement != Vector3.zero)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15F);
+                }
+            }
+            else
+            {
+                var x = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed / 2f;
+                var z = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed / 2f;
+                myanamator.SetFloat("RunHorozontal", x * 100);
+                myanamator.SetFloat("RunVerticle", z * 100);
+                transform.Translate(x, 0, z, Space.World);
+
+
+                Vector3 movement = new Vector3(x, 0.0f, z);
+                if (movement != Vector3.zero)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15F);
+                }
             }
         }
         else
         {
-            var x = Input.GetAxis("Horizontal") * Time.deltaTime * moveSpeed / 2f;
-            var z = Input.GetAxis("Vertical") * Time.deltaTime * moveSpeed / 2f;
-            myanamator.SetFloat("RunHorozontal", x * 100);
-            myanamator.SetFloat("RunVerticle", z * 100);
-            transform.Translate(x, 0, z, Space.World);
-
-
-            Vector3 movement = new Vector3(x, 0.0f, z);
-            if (movement != Vector3.zero)
-            {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15F);
-            }
+            Debug.Log("action being made");
         }
         slider.value = WaterFillRate;
 
-        if (Input.GetKey(KeyCode.Space) && (WaterFillRate > 0))
+        if(Fireflyeaten == true)
         {
-            // moveDirection.y = jumpSpeed;
-            rb.AddForce(0, 10f, 0);
-
-
-
             WaterFillRate = WaterFillRate - 0.5f * Time.deltaTime;
-        }
+            if (WaterFillRate <= 0)
+            {
+                WaterFillRate = 0;
 
-        if (IsGrounded() && Input.GetKeyDown(KeyCode.Space))
+            }
+        }
+        if (rockPull == false)
         {
-            rb.AddForce(0, 400f, 0);
+            if (Input.GetButton("Jump") && (WaterFillRate > 0))
+            {
+                // moveDirection.y = jumpSpeed;
+                rb.AddForce(0, 10f, 0);
 
+
+
+                WaterFillRate = WaterFillRate - 0.5f * Time.deltaTime;
+            }
+
+            if (IsGrounded() && Input.GetButtonDown("Jump"))
+            {
+                rb.AddForce(0, 400f, 0);
+
+            }
         }
-
         /*   var horizontal = Input.GetAxis("Horizontal");
            var vertical = Input.GetAxis("Vertical");
            myanamator.SetFloat("RunHorozontal", horizontal);
@@ -113,15 +158,17 @@ public class Player : MonoBehaviour {
 
     public void DrinkWater()
     {
-        WaterFillRate = WaterFillRate + 0.3f * Time.deltaTime;
-        slider.value = WaterFillRate;
-        if (WaterFillRate >= 1)
+        if (Fireflyeaten == false)
         {
-            WaterFillRate = 1;
-            
-        }
+            WaterFillRate = WaterFillRate + 0.3f * Time.deltaTime;
+            slider.value = WaterFillRate;
+            if (WaterFillRate >= 1)
+            {
+                WaterFillRate = 1;
 
-       
+            }
+
+        }
     }
 
   /*  public void Waterjump()
@@ -150,10 +197,22 @@ public class Player : MonoBehaviour {
         if (other.CompareTag("Water"))
         {
             Debug.Log("Player is ready to drink");
-            if (Input.GetKey(KeyCode.V))
+            if (Input.GetButton("Interact"))
             {
                 Debug.Log("V key was pressed.");
                 DrinkWater();
+            }
+        }
+        if (other.CompareTag("Rock"))
+        {
+            Debug.Log("ready to pull");
+            if (Input.GetButton("Interact"))
+            {
+                rockPull = true;
+                other.transform.parent = gameObject.transform;
+                Debug.Log("Intraction key was pressed.");
+               
+              
             }
         }
         else return;
@@ -161,16 +220,41 @@ public class Player : MonoBehaviour {
 
     public void EatFireFly()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Fireflyeaten == false)
+        {
+            if (Input.GetButtonDown("Shoot") && Time.time > nextFire)
             {
-            Tounge.SetActive(true);
-            //Instantiate(Tounge.gameObject, ToungePoint.transform.position, ToungePoint.transform.rotation);
+
+                action = true;
+                Invoke("Action", 0.5f);
+                Tounge.SetActive(true);
+                //Instantiate(Tounge.gameObject, ToungePoint.transform.position, ToungePoint.transform.rotation);
+                nextFire = Time.time + fireRate;
+            }
         }
     }
     private bool IsGrounded()
     {
        return Physics.CheckCapsule(col.bounds.center, new Vector3(col.bounds.center.x,col.bounds.min.y, col.bounds.center.z ), col.radius * .9f, groundLayer)
         ;
+    }
+
+    public void ShootFirefly()
+    {
+        if (Input.GetButtonDown("Shoot") && Fireflyeaten == true)
+        {
+            FireflyGO.SetActive(true);
+            FireflyGO.transform.parent = null;
+            FireflyGO.transform.position = Currentpos.transform.position;
+            FireflyGO.GetComponent<Rigidbody>().velocity = Currentpos.transform.forward * 6;
+            nextFire = Time.time + fireRate;
+            Fireflyeaten = false;
+        }
+    }
+
+    public void Action()
+    {
+        action = false;
     }
     
   
