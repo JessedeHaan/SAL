@@ -58,6 +58,7 @@ public class ToungeMove : MonoBehaviour {
 public void Destroy()
     {
         gameObject.SetActive(false);
+        CancelInvoke();
     }
 }
 

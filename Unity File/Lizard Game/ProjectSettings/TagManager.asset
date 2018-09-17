@@ -8,6 +8,8 @@ TagManager:
   - Tougne
   - Rune
   - Rock
+  - WaterSign
+  - Ground
   layers:
   - Default
   - TransparentFX

@@ -26,9 +26,10 @@ public class Player : MonoBehaviour {
     public bool action = false;
     public GameObject FireflyGO;
     public Transform Currentpos;
-    public float fireRate = 0.5f;
+    public float fireRate = 3f;
     private float nextFire = 0.0f;
     public bool rockPull = false;
+
 
     private void Awake()
     {
@@ -49,10 +50,9 @@ public class Player : MonoBehaviour {
 
        // Waterjump();
         EatFireFly();
-        if (Fireflyeaten == true)
-        {
-            ShootFirefly();
-        }
+       
+         ShootFirefly();
+        
     }
 
     void Movement()
@@ -127,7 +127,8 @@ public class Player : MonoBehaviour {
             {
                 // moveDirection.y = jumpSpeed;
                 rb.AddForce(0, 10f, 0);
-
+                myanamator.SetTrigger("Jump");
+                myanamator.SetFloat("Waterboost", WaterFillRate);
 
 
                 WaterFillRate = WaterFillRate - 0.5f * Time.deltaTime;
@@ -135,6 +136,8 @@ public class Player : MonoBehaviour {
 
             if (IsGrounded() && Input.GetButtonDown("Jump"))
             {
+                myanamator.SetTrigger("Jump");
+                myanamator.SetFloat("Waterboost", 0f);
                 rb.AddForce(0, 400f, 0);
 
             }
@@ -215,6 +218,7 @@ public class Player : MonoBehaviour {
               
             }
         }
+      
         else return;
     }
 
@@ -246,9 +250,11 @@ public class Player : MonoBehaviour {
             FireflyGO.SetActive(true);
             FireflyGO.transform.parent = null;
             FireflyGO.transform.position = Currentpos.transform.position;
+           
             FireflyGO.GetComponent<Rigidbody>().velocity = Currentpos.transform.forward * 6;
-            nextFire = Time.time + fireRate;
+            
             Fireflyeaten = false;
+            nextFire = Time.time + fireRate;
         }
     }
 
