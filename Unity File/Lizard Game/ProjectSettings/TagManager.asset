@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Water
   - Tougne
+  - Rune
+  - Rock
+  - WaterSign
+  - Ground
   layers:
   - Default
   - TransparentFX
@@ -17,8 +21,8 @@ TagManager:
   - 
   - PostProcessing
   - Ground
-  - 
-  - 
+  - Firefly
+  - Player
   - 
   - 
   - 
